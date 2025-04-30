@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from db_connection import connect_to_db
 
-
 def update_student_group_table(tree):
     """Обновляет таблицу Student_Group"""
     for row in tree.get_children():
@@ -26,9 +25,8 @@ def update_student_group_table(tree):
     else:
         print("Ошибка подключения к базе данных.")
 
-
 def create_student_group_tab(tab_control):
-    """Создает вкладку "Группы студентов" с таблицей"""
+    """Создает вкладку 'Группы студентов' с таблицей"""
     student_group_tab = ttk.Frame(tab_control)
     tab_control.add(student_group_tab, text="Группы студентов")
 
@@ -43,5 +41,8 @@ def create_student_group_tab(tab_control):
 
     tree.pack(fill="both", expand=True)
 
-    # Заполняем таблицу данными
+    # Заполняем таблицу данными сразу при открытии вкладки
     update_student_group_table(tree)
+
+    # Также добавим обновление данных при изменении вкладки
+    student_group_tab.bind("<Configure>", lambda event: update_student_group_table(tree))  # обновление при изменении размера вкладки

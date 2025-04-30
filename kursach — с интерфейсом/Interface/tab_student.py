@@ -99,7 +99,12 @@ def create_student_tab(tab_control):
         tree.heading(col, text=col)
         tree.column(col, width=120, anchor="center")
 
+    # Заполняем таблицу данными сразу при открытии вкладки
     update_student_table(tree)
+
+    # Добавляем обновление при изменении вкладки
+    student_tab.bind("<Configure>", lambda event: update_student_table(tree))  # обновление при изменении размера вкладки
+
     tree.pack(fill="both", expand=True)
 
     # Кнопки
