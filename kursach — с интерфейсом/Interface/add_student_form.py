@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkcalendar import DateEntry
 import re
 from datetime import datetime
 from Interface.db_connection import connect_to_db
@@ -15,25 +16,28 @@ def _open_student_form(title, tree, update_callback, student_data=None):
     window.title(title)
 
     labels = [
-        "ID студента", "ФИО", "Дата рождения (YYYY-MM-DD)", "Серия паспорта", "Номер паспорта",
-        "Кем выдан", "Дата выдачи паспорта (YYYY-MM-DD)", "Телефон", "Email", "Организация", "Должность"
+        "ID студента", "ФИО", "Дата рождения", "Серия паспорта", "Номер паспорта",
+        "Кем выдан", "Дата выдачи паспорта", "Телефон", "Email", "Организация", "Должность"
     ]
     entries = {}
 
     for i, label in enumerate(labels):
         tk.Label(window, text=label).grid(row=i, column=0, padx=10, pady=5, sticky="e")
-        entry = tk.Entry(window, width=50)
+        if label in ["Дата рождения", "Дата выдачи паспорта"]:
+            entry = DateEntry(window, width=47, date_pattern='yyyy-mm-dd')
+        else:
+            entry = tk.Entry(window, width=50)
         entry.grid(row=i, column=1, padx=10, pady=5)
         entries[label] = entry
 
     if student_data:
         entries["ID студента"].insert(0, student_data["id_student"])
         entries["ФИО"].insert(0, student_data["fio"])
-        entries["Дата рождения (YYYY-MM-DD)"].insert(0, student_data["date"])
+        entries["Дата рождения"].set_date(student_data["date"])
         entries["Серия паспорта"].insert(0, student_data["series"])
         entries["Номер паспорта"].insert(0, student_data["number"])
         entries["Кем выдан"].insert(0, student_data["issued_by"])
-        entries["Дата выдачи паспорта (YYYY-MM-DD)"].insert(0, student_data["date_of_issue"])
+        entries["Дата выдачи паспорта"].set_date(student_data["date_of_issue"])
         entries["Телефон"].insert(0, student_data["phone_number"])
         entries["Email"].insert(0, student_data["email"])
         entries["Организация"].insert(0, student_data["organisation"])
@@ -44,11 +48,11 @@ def _open_student_form(title, tree, update_callback, student_data=None):
         student = {
             "id_student": entries["ID студента"].get().strip(),
             "fio": entries["ФИО"].get().strip(),
-            "date": entries["Дата рождения (YYYY-MM-DD)"].get().strip(),
+            "date": entries["Дата рождения"].get().strip(),
             "series": entries["Серия паспорта"].get().strip(),
             "number": entries["Номер паспорта"].get().strip(),
             "issued_by": entries["Кем выдан"].get().strip(),
-            "date_of_issue": entries["Дата выдачи паспорта (YYYY-MM-DD)"].get().strip(),
+            "date_of_issue": entries["Дата выдачи паспорта"].get().strip(),
             "phone_number": entries["Телефон"].get().strip(),
             "email": entries["Email"].get().strip(),
             "organisation": entries["Организация"].get().strip(),
@@ -69,7 +73,6 @@ def _open_student_form(title, tree, update_callback, student_data=None):
         try:
             with conn.cursor() as cur:
                 if student_data:
-                    # UPDATE
                     cur.execute(""" 
                         UPDATE "Student"
                         SET fio = %(fio)s,
@@ -85,7 +88,6 @@ def _open_student_form(title, tree, update_callback, student_data=None):
                         WHERE id_student = %(id_student)s
                     """, student)
                 else:
-                    # Проверки на уникальность
                     check_if_exists(conn, 'SELECT COUNT(*) FROM "Student" WHERE id_student = %s', student["id_student"], "Такой ID уже существует")
                     check_if_exists(conn, 'SELECT COUNT(*) FROM "Student" WHERE phone_number = %s', student["phone_number"], "Такой телефон уже существует")
                     check_if_exists(conn, 'SELECT COUNT(*) FROM "Student" WHERE email = %s', student["email"], "Такой email уже существует")
@@ -152,12 +154,12 @@ def validate_student_fields(data):
         try:
             datetime.strptime(data["date"], "%Y-%m-%d")
         except ValueError:
-            errors.append("• Неверный формат даты рождения. Используйте YYYY-MM-DD")
+            errors.append("• Неверный формат даты рождения")
 
         try:
             datetime.strptime(data["date_of_issue"], "%Y-%m-%d")
         except ValueError:
-            errors.append("• Неверный формат даты выдачи паспорта. Используйте YYYY-MM-DD")
+            errors.append("• Неверный формат даты выдачи паспорта")
 
         if not re.match(r"^[А-Яа-яЁё\s]+$", data["fio"]):
             errors.append("• ФИО должно содержать только русские буквы и пробелы")

@@ -1,5 +1,6 @@
-from tkinter import ttk
+from tkinter import ttk, Button, messagebox
 from Interface.db_connection import connect_to_db
+from Interface.add_group_form import open_group_form
 
 
 def update_group_table(tree):
@@ -17,8 +18,7 @@ def update_group_table(tree):
         ''')
         rows = cursor.fetchall()
 
-        for index, row in enumerate(rows, 1):  # Используем enumerate для добавления порядкового номера
-            # Вставляем строку с порядковым номером и данными
+        for index, row in enumerate(rows, 1):
             tree.insert('', 'end', values=(index, row[0], row[1], row[2], row[3], row[4]))
 
         conn.close()
@@ -29,16 +29,32 @@ def create_group_tab(tab_control):
     group_tab = ttk.Frame(tab_control)
     tab_control.add(group_tab, text="Группы")
 
-    # Создаем таблицу
     columns = ("№", "Шифр", "ID курса", "Название курса", "Дата начала", "Дата окончания")
     tree = ttk.Treeview(group_tab, columns=columns, show="headings", style="Treeview")
 
-    # Настройка столбцов
     for col in columns:
         tree.heading(col, text=col)
         tree.column(col, width=120, anchor="center")
 
     tree.pack(fill="both", expand=True)
 
-    # Заполняем таблицу данными
+    # Кнопки управления
+    button_frame = ttk.Frame(group_tab)
+    button_frame.pack(pady=10)
+
+    add_button = Button(button_frame, text="Добавить группу",
+                        command=lambda: open_group_form(lambda: update_group_table(tree)))
+    add_button.pack(side="left", padx=5)
+
+    def edit_selected_group():
+        selected_item = tree.selection()
+        if selected_item:
+            values = tree.item(selected_item)["values"]
+            open_group_form(lambda: update_group_table(tree), values)
+        else:
+            messagebox.showwarning("Внимание", "Выберите группу для редактирования")
+
+    edit_button = Button(button_frame, text="Редактировать группу", command=edit_selected_group)
+    edit_button.pack(side="left", padx=5)
+
     update_group_table(tree)

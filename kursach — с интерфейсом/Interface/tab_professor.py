@@ -18,7 +18,7 @@ def create_professor_tab(notebook):
     tree.column("ФИО", width=200)
     tree.column("Телефон", width=120)
     tree.column("Email", width=200)
-    tree.pack(fill="both", expand=True, padx=10, pady=10)
+    tree.pack(fill="both", expand=True, padx=0, pady=0)
 
     def update_professor_table(tree_widget):
         conn = connect_to_db()
