@@ -1,5 +1,6 @@
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from Interface.db_connection import connect_to_db
+from Interface.add_course_form import open_add_course_form, open_edit_course_form
 
 
 def update_course_table(tree):
@@ -13,8 +14,7 @@ def update_course_table(tree):
         cursor.execute('SELECT id_course, name, hours FROM "Course"')
         rows = cursor.fetchall()
 
-        for index, row in enumerate(rows, 1):  # Используем enumerate для добавления порядкового номера
-            # Вставляем данные с порядковым номером в первый столбец
+        for index, row in enumerate(rows, 1):
             tree.insert('', 'end', values=(index, row[0], row[1], row[2]))
 
         conn.close()
@@ -25,8 +25,7 @@ def create_course_tab(tab_control):
     course_tab = ttk.Frame(tab_control)
     tab_control.add(course_tab, text="Курсы")
 
-    # Создаем таблицу
-    columns = ("№", "ID", "Назавание курса", "Кол-во часов")
+    columns = ("№", "ID", "Название курса", "Кол-во часов")
     tree = ttk.Treeview(course_tab, columns=columns, show="headings", style="Treeview")
 
     for col in columns:
@@ -35,5 +34,34 @@ def create_course_tab(tab_control):
 
     tree.pack(fill="both", expand=True)
 
-    # Заполняем таблицу данными
+    button_frame = ttk.Frame(course_tab)
+    button_frame.pack(pady=5)
+
+    ttk.Button(
+        button_frame,
+        text="Добавить курс",
+        command=lambda: open_add_course_form(tree, update_course_table)
+    ).pack(side="left", padx=5)
+
+    ttk.Button(
+        button_frame,
+        text="Редактировать курс",
+        command=lambda: edit_selected_course(tree)
+    ).pack(side="left", padx=5)
+
     update_course_table(tree)
+
+
+def edit_selected_course(tree):
+    selected = tree.selection()
+    if not selected:
+        messagebox.showwarning("Внимание", "Выберите курс для редактирования")
+        return
+
+    values = tree.item(selected[0])["values"]
+    course_data = {
+        "id_course": values[1],
+        "name": values[2],
+        "hours": str(values[3])
+    }
+    open_edit_course_form(course_data, tree, update_course_table)
