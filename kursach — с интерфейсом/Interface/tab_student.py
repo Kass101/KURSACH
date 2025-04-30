@@ -99,17 +99,13 @@ def create_student_tab(tab_control):
         tree.heading(col, text=col)
         tree.column(col, width=120, anchor="center")
 
-    # Заполняем таблицу данными сразу при открытии вкладки
     update_student_table(tree)
-
-    # Добавляем обновление при изменении вкладки
-    student_tab.bind("<Configure>", lambda event: update_student_table(tree))  # обновление при изменении размера вкладки
-
+    student_tab.bind("<Configure>", lambda event: update_student_table(tree))
     tree.pack(fill="both", expand=True)
 
     # Кнопки
     button_frame = ttk.Frame(student_tab)
-    button_frame.pack(fill="x", padx=10, pady=10)
+    button_frame.pack(anchor="center", pady=10)
 
     def on_add():
         open_add_student_form(tree, update_student_table)
@@ -142,6 +138,11 @@ def create_student_tab(tab_control):
             return
         open_group_selection_window(tree, selected_items)
 
-    ttk.Button(button_frame, text="Добавить студента", command=on_add).pack(side="left", padx=5)
-    ttk.Button(button_frame, text="Редактировать студента", command=on_edit).pack(side="left", padx=5)
-    ttk.Button(button_frame, text="Добавить в группу", command=on_add_to_group).pack(side="left", padx=5)
+    # Выровненные кнопки по центру
+    add_button = ttk.Button(button_frame, text="Добавить студента", command=on_add)
+    edit_button = ttk.Button(button_frame, text="Редактировать студента", command=on_edit)
+    group_button = ttk.Button(button_frame, text="Добавить в группу", command=on_add_to_group)
+
+    add_button.grid(row=0, column=0, padx=10)
+    edit_button.grid(row=0, column=1, padx=10)
+    group_button.grid(row=0, column=2, padx=10)
