@@ -1,6 +1,5 @@
-import tkinter as tk
 from tkinter import ttk
-from db_connection import connect_to_db
+from Interface.db_connection import connect_to_db
 
 def update_student_group_table(tree):
     """Обновляет таблицу Student_Group"""

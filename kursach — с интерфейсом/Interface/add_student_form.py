@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import re
 from datetime import datetime
-from db_connection import connect_to_db
+from Interface.db_connection import connect_to_db
 
 def open_add_student_form(tree, update_callback):
     _open_student_form("Добавить студента", tree, update_callback)

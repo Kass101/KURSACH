@@ -1,4 +1,4 @@
-from db_connection import connect_to_db
+from Interface.db_connection import connect_to_db
 
 
 def validate_Class(data, conn):

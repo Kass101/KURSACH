@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from db_connection import connect_to_db
+from Interface.db_connection import connect_to_db
 from Interface.add_student_form import open_add_student_form, open_edit_student_form
 
 def update_student_table(tree):

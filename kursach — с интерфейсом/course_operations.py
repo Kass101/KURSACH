@@ -1,4 +1,4 @@
-from db_connection import connect_to_db
+from Interface.db_connection import connect_to_db
 import re
 
 def validate_Course(data, conn):

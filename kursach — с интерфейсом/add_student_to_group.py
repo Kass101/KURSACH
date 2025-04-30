@@ -1,4 +1,4 @@
-from db_connection import connect_to_db
+from Interface.db_connection import connect_to_db
 
 def validate_Student_Group(data, conn):
     if not check_if_student_exists(data["id_student"], conn):
