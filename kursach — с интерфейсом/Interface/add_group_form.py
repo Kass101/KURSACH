@@ -31,37 +31,54 @@ def get_courses():
 
 
 def save_group(shifr, course_id, begin_date, end_date, window, refresh_callback, editing=False, original_shifr=None):
+    errors = []
+
+    # Проверка формата шифра
     if not re.match(r'^[А-Я]{2}-\d{2}$', shifr):
-        messagebox.showerror("Ошибка", "Шифр должен быть в формате XX-00 (две заглавные русские буквы, тире и две цифры)")
-        return
+        errors.append("Шифр должен быть в формате XX-00 (две заглавные русские буквы, тире и две цифры)")
 
-    if not is_shifr_unique(shifr, editing, original_shifr):
-        messagebox.showerror("Ошибка", "Группа с таким шифром уже существует")
-        return
-
+    # Проверка дат
     if begin_date >= end_date:
-        messagebox.showerror("Ошибка", "Дата окончания должна быть позже даты начала")
+        errors.append("Дата окончания должна быть позже даты начала")
+
+    # Проверка уникальности шифра
+    if editing:
+        if shifr != original_shifr and not is_shifr_unique(shifr):
+            errors.append("Группа с таким шифром уже существует")
+    else:
+        if not is_shifr_unique(shifr):
+            errors.append("Группа с таким шифром уже существует")
+
+    # Если есть ошибки — показать их списком
+    if errors:
+        message = "Обнаружены ошибки:\n" + "\n".join([f"{i + 1}. {error}" for i, error in enumerate(errors)])
+        messagebox.showerror("Ошибка", message)
         return
 
+    # Сохранение данных
     conn = connect_to_db()
     if conn:
-        cursor = conn.cursor()
-        if editing:
-            cursor.execute('''
-                UPDATE "Group"
-                SET shifr = %s, id_course = %s, begin_date = %s, end_date = %s
-                WHERE shifr = %s
-            ''', (shifr, course_id, begin_date, end_date, original_shifr))
-        else:
-            cursor.execute('''
-                INSERT INTO "Group" (shifr, id_course, begin_date, end_date)
-                VALUES (%s, %s, %s, %s)
-            ''', (shifr, course_id, begin_date, end_date))
-        conn.commit()
-        conn.close()
-        window.destroy()
-        refresh_callback()
-
+        try:
+            cursor = conn.cursor()
+            if editing:
+                cursor.execute('''
+                    UPDATE "Group"
+                    SET id_course = %s, begin_date = %s, end_date = %s
+                    WHERE shifr = %s
+                ''', (course_id, begin_date, end_date, original_shifr))
+            else:
+                cursor.execute('''
+                    INSERT INTO "Group" (shifr, id_course, begin_date, end_date)
+                    VALUES (%s, %s, %s, %s)
+                ''', (shifr, course_id, begin_date, end_date))
+            conn.commit()
+            messagebox.showinfo("Успешно", "Данные успешно сохранены")
+            window.destroy()
+            refresh_callback()
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось сохранить данные: {e}")
+        finally:
+            conn.close()
 
 def open_group_form(refresh_callback, existing_data=None):
     """Открывает окно для добавления/редактирования группы"""
@@ -94,16 +111,46 @@ def open_group_form(refresh_callback, existing_data=None):
     end_date_picker.grid(row=3, column=1, padx=10, pady=5)
 
     def on_submit():
+        errors = []
+
         selected_course = course_var.get()
         if not selected_course:
-            messagebox.showerror("Ошибка", "Выберите курс")
+            errors.append("Выберите курс")
+        else:
+            course_id = int(selected_course.split(" - ")[0])
+
+        shifr = shifr_var.get().strip()
+        begin_date = begin_date_picker.get_date()
+        end_date = end_date_picker.get_date()
+
+        # Проверка формата шифра
+        if not re.match(r'^[А-Я]{2}-\d{2}$', shifr):
+            errors.append("Шифр должен быть в формате XX-00 (две заглавные русские буквы, тире и две цифры)")
+
+        # Проверка дат
+        if begin_date >= end_date:
+            errors.append("Дата окончания должна быть позже даты начала")
+
+        # Проверка уникальности шифра
+        if existing_data:
+            if shifr != existing_data[1] and not is_shifr_unique(shifr):
+                errors.append("Группа с таким шифром уже существует")
+        else:
+            if not is_shifr_unique(shifr):
+                errors.append("Группа с таким шифром уже существует")
+
+        # Если есть ошибки — показать их списком
+        if errors:
+            message = "Обнаружены ошибки:\n" + "\n".join([f"• {e}" for e in errors])
+            messagebox.showerror("Ошибка", message)
             return
-        course_id = int(selected_course.split(" - ")[0])
+
+        # Всё ок — сохраняем
         save_group(
-            shifr_var.get().strip(),
+            shifr,
             course_id,
-            begin_date_picker.get_date(),
-            end_date_picker.get_date(),
+            begin_date,
+            end_date,
             window,
             refresh_callback,
             editing=existing_data is not None,
