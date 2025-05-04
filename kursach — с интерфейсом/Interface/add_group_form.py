@@ -3,7 +3,6 @@ from tkcalendar import DateEntry
 from Interface.db_connection import connect_to_db
 import re
 
-
 def is_shifr_unique(shifr, editing=False, original_shifr=None):
     """Проверяет, уникален ли шифр группы"""
     conn = connect_to_db()
@@ -17,7 +16,6 @@ def is_shifr_unique(shifr, editing=False, original_shifr=None):
         return result is None
     return False
 
-
 def get_courses():
     """Получает список курсов из БД"""
     conn = connect_to_db()
@@ -28,7 +26,6 @@ def get_courses():
         conn.close()
         return courses
     return []
-
 
 def save_group(shifr, course_id, begin_date, end_date, window, refresh_callback, editing=False, original_shifr=None):
     errors = []
@@ -49,6 +46,16 @@ def save_group(shifr, course_id, begin_date, end_date, window, refresh_callback,
         if not is_shifr_unique(shifr):
             errors.append("Группа с таким шифром уже существует")
 
+    # Проверка существования курса
+    conn = connect_to_db()
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id_course FROM "Course" WHERE id_course = %s', (str(course_id),))
+        course_exists = cursor.fetchone()
+        conn.close()
+        if not course_exists:
+            errors.append(f"Курс с id {course_id} не существует.")
+
     # Если есть ошибки — показать их списком
     if errors:
         message = "Обнаружены ошибки:\n" + "\n".join([f"{i + 1}. {error}" for i, error in enumerate(errors)])
@@ -61,7 +68,7 @@ def save_group(shifr, course_id, begin_date, end_date, window, refresh_callback,
         try:
             cursor = conn.cursor()
             if editing:
-                cursor.execute('''
+                cursor.execute(''' 
                     UPDATE "Group"
                     SET id_course = %s, begin_date = %s, end_date = %s
                     WHERE shifr = %s
@@ -117,7 +124,7 @@ def open_group_form(refresh_callback, existing_data=None):
         if not selected_course:
             errors.append("Выберите курс")
         else:
-            course_id = int(selected_course.split(" - ")[0])
+            course_id = selected_course.split(" - ")[0]
 
         shifr = shifr_var.get().strip()
         begin_date = begin_date_picker.get_date()
